@@ -12,19 +12,12 @@ restore0Dir
 
 runApplication splitMeshRegions -cellZones -overwrite
 
-# Creating changeDictionaryDicts
-./caseSetUp
-
-
 # Remove fluid fields from solid regions (important for post-processing)
 for region in $(foamListRegions solid)
 do
     rm -f 0/"$region"/{rho,nut,alphat,epsilon,k,U,p_rgh,qr,G,IDefault}
     rm -f processor*/0/"$region"/{rho,nut,alphat,epsilon,k,U,p_rgh,qr,G,IDefault}
 done
-
-# Particular changeDict setup
-./sedrun.pre
 
 for region in $(foamListRegions)
 do
