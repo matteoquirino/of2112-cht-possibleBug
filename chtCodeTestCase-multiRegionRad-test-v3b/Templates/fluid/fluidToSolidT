@@ -1,0 +1,8 @@
+        {
+            type            compressible::turbulentTemperatureRadCoupledMixed;
+            Tnbr            T;
+            kappaMethod     fluidThermo;
+            qrNbr           none;
+            qr              qr;
+            value           uniform 0;
+        }

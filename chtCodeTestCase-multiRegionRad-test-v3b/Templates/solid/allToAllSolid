@@ -1,0 +1,9 @@
+  		{
+           type            externalWallHeatFluxTemperature; 
+           mode            coefficient;
+           Ta              uniform 0;     // ambient temperature /[K] 
+           h               uniform 1e-6;      // heat transfer coeff /[W/K/m2] 
+           value           uniform 300;     // initial temperature / [K] 
+           emissivity      0.86;
+           kappaMethod     solidThermo; 
+        }

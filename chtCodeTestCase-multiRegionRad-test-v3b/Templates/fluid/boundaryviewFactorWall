@@ -1,0 +1,8 @@
+boundary
+{
+    "(m.*|dom.*)"
+    {
+        inGroups        2(wall viewFactorWall);
+    }
+}
+

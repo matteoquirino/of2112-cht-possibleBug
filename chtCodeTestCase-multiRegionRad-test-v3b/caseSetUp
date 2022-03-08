@@ -1,0 +1,261 @@
+#!/bin/bash
+
+#HEADER
+#The script main steps are
+#0) INPUT solid/fluid region list
+#1) Copy the fv files from templates into the regions folders in ./system
+#2) For each region extraction of boundary faces and creation of changeDictionaryDict to put in
+#	in the ./system folder
+#3) Copy radiationProperties, thermalProperties and viewFactorsDict from templates and put in ./const#	 ant regions folders
+
+#0) INPUT list of solid/fluid regions:
+
+#------Extraxting the solid and fluid region names
+listsolid=$(egrep "solid" ./constant/regionProperties | egrep -o '\(.*\)' | sed -e 's:(::' -e 's:)::')
+listfluid=$(egrep "fluid" ./constant/regionProperties | egrep -o '\(.*\)' | sed -e 's:(::' -e 's:)::')
+#--------------------------------------------------#
+
+#------START Verbose checks
+echo "Verbose checks on solid and fluid lists:"
+
+echo -e "\nSolid list:\n$listsolid"
+
+for i in $listsolid; do
+echo "$i"
+done
+
+echo -e "\nFluid list:\n$listfluid"
+
+for i in $listfluid; do
+echo "$i"
+done
+#------END Verbose checks
+
+
+
+
+
+
+#1) COPY fv files and changeDictionaryDict from templates and put it in the respective solid/fluid region
+
+#-----Copying templates into region folders
+for i in $listsolid; do
+	cp ./Templates/solid/fv* ./system/$i
+	cp ./Templates/solid/change* ./system/$i
+	cp ./Templates/decompose* ./system/$i
+done
+	echo -e "\nCopied fv files, changeDict and decomposePar in solid regions"
+
+for i in $listfluid; do
+	cp ./Templates/fluid/fv* ./system/$i
+	cp ./Templates/fluid/change* ./system/$i
+	cp ./Templates/decompose* ./system/$i
+done
+	echo -e "\nCopied fv files, changeDict and decomposePar in fluid regions"
+	cp ./Templates/decompose* ./system
+	echo -e "\nCopied overall decomposePar in system"
+#--------------------------------------------------------------#
+
+
+
+
+
+
+
+#2) FOR each region EXTRACTION of the boundaries
+
+#-----Assign path varibles to templates containing the boundary text info
+path_stf_bound=./Templates/solid/solidToFluid
+path_sts_bound=./Templates/solid/solidToSolid
+path_all_bound=./Templates/solid/allToAllSolid
+#--------------------------------------------------------------#
+
+#-----Solid changeDictionaryDict overwrite
+for i in $listsolid; do
+	
+	#Get the path for the changeDict file 
+	path=./system/$i/changeDictionaryDict 
+	
+	#Get the list of boundary regions 
+	boundaries=$(egrep -o $i"_to.*" ./constant/$i/polyMesh/boundary)
+    
+	#Verbose echo
+	echo -e "\nThe $i boundaries are:\n$boundaries" 
+	
+	#Cleaning of the template file copied in the region folder and heading writing
+	sed -i '/^T/,$ s/.*//' $path #cleaning the file
+	sed -i -e 's/[ ^I]*$//' -e '/^$/ d' $path #cleaning spaces and blank lines
+	echo -e "T\n{\n\tinternalField\tuniform 300;\n\tboundaryField\n\t{" >> $path #wrting header
+
+
+	#Verbose echo
+	echo -e "\nThe $i boundary regions are:"
+	
+	
+	#Checking if the boundary is with a solid region or a fluid region, thus changing the writing
+	for j in $boundaries; do
+		
+		#Verbose echo
+		if [[ "$j" =~ ^domain.* ]]; then
+			partb=$(echo $j | cut -d'_' -f3-5); #cutting the second region of the boundary, thus the boundary region
+		else
+			partb=$(echo $j | cut -d'_' -f4-5); #cutting the second region of the boundary, thus the boundary region
+		fi
+		echo -e "$partb"
+		
+		#Checks on boundary type
+		for k in $listfluid; do
+			if [[ "$partb" == "$k" ]]; then
+				echo -e "\t\t"'"'"$j"'"' >> $path
+				sed -i -r 's/[0-9]+;$/300;/' $path_stf_bound
+				sed -i '/'$j'"$/ r '$path_stf_bound $path
+			fi
+		done
+		for k in $listsolid; do
+			if [[ "$partb" == "$k" ]]; then
+				echo -e "\t\t"'"'"$j"'"' >> $path
+				sed -i -r 's/[0-9]+;$/300;/' $path_sts_bound
+				sed -i '/'$j'"$/ r '$path_sts_bound $path
+			fi
+		done
+	done
+	
+	#Verbose echo
+	echo -e "\t}\n}" >> $path
+	echo -e "// ************************************************************************* //" >> $path
+done
+#--------------------------------------------------------------#
+
+
+#-----Fluid changeDictionartDict overwrite
+tpath_fts_bound=./Templates/fluid/fluidToSolidT
+tpath_ftf_bound=./Templates/fluid/fluidToFluidT
+tpath_all_bound=./Templates/fluid/allToAllT
+qrpath_ftf_bound=./Templates/fluid/fluidToFluidQr
+qrpath_fts_bound=./Templates/fluid/fluidToSolidQr
+qrpath_all_bound=./Templates/fluid/allToAllQr
+
+for i in $listfluid; do
+	
+	#Get the path for the changeDict file 
+	path=./system/$i/changeDictionaryDict 
+	
+	#Get the list of boundary regions 
+	boundaries=$(egrep -o $i"_to.*" ./constant/$i/polyMesh/boundary)
+    
+	#Verbose echo
+	echo -e "\nThe $i boundaries are:\n$boundaries" 
+	
+	#------------------TEMPERATURE CYCLE-----------------------------------------#
+
+	#Cleaning of the template file copied in the region folder and heading writing
+	sed -i '/^T/,$ s/.*//' $path #cleaning the file
+	sed -i -e 's/[ ^I]*$//' -e '/^$/ d' $path #cleaning spaces and blank lines
+	echo -e "T\n{\n\tinternalField\tuniform 0;\n\tboundaryField\n\t{" >> $path #wrting header
+	
+	#Writing the to all boundary stuff
+    echo -e "\t\t"'"(.*Y|.*X)"' >> $path
+	cat $tpath_all_bound >> $path
+
+	#Verbose echo
+	echo -e "\nThe $i boundary regions are:"
+
+
+	for j in $boundaries; do
+		
+		#Verbose echo
+		if [[ "$j" =~ ^domain.* ]]; then
+			partb=$(echo $j | cut -d'_' -f3-5); #cutting the second region of the boundary, thus the boundary region
+		else
+			partb=$(echo $j | cut -d'_' -f4-5); #cutting the second region of the boundary, thus the boundary region
+		fi
+		echo -e "$partb"
+
+		#Checks on boundary type
+		for k in $listfluid; do
+			if [[ "$partb" == "$k" ]]; then
+				echo -e "\t\t"'"'"$j"'"' >> $path
+				sed -i '/'$j'"$/ r '$tpath_ftf_bound $path
+			fi
+		done
+		for k in $listsolid; do
+			if [[ "$partb" == "$k" ]]; then
+				echo -e "\t\t"'"'"$j"'"' >> $path
+				sed -i '/'$j'"$/ r '$tpath_fts_bound $path
+			fi
+		done	
+	done	
+	echo -e "\t}\n}" >> $path
+
+	#-----------------------------------------------------------------------------#
+
+
+	#----------------RADIATION CYCLE----------------------------------------------#
+
+	echo -e "qr\n{\n\tinternalField\tuniform 0;\n\tboundaryField\n\t{" >> $path #wrting header
+	
+	#Writing the to all boundary stuff
+    echo -e "\t\t"'"(.*Y|.*X)"' >> $path
+	cat $qrpath_all_bound >> $path
+
+	#Verbose echo
+	echo -e "\nThe $i boundary regions are:"
+
+
+	for j in $boundaries; do
+		
+		#Verbose echo
+		if [[ "$j" =~ ^domain.* ]]; then
+			partb=$(echo $j | cut -d'_' -f3-4); #cutting the second region of the boundary, thus the boundary region
+		else
+			partb=$(echo $j | cut -d'_' -f4-5); #cutting the second region of the boundary, thus the boundary region
+		fi
+		echo -e "$partb"
+
+		#Checks on boundary type
+		for k in $listfluid; do
+			if [[ "$partb" == "$k" ]]; then
+				echo -e "\t\t"'"'"$j"'"' >> $path
+#				sed -i '/'$j'/ r '$qrpath_ftf_bound $path
+				cat $qrpath_ftf_bound >> $path
+			fi
+		done
+		for k in $listsolid; do
+			if [[ "$partb" == "$k" ]]; then
+				echo -e "\t\t"'"'"$j"'"' >> $path
+#				sed -i '/'$j'/ r '$qrpath_fts_bound $path
+				cat $qrpath_fts_bound >> $path
+			fi
+		done	
+	done	
+
+	#Verbose echo
+	echo -e "\t}\n}" >> $path
+	
+	cat ./Templates/fluid/boundaryviewFactorWall >> $path
+
+	echo -e "// ************************************************************************* //" >> $path
+done
+
+
+
+# TODO
+#--> Consider replacing sed with cat
+#--> Consider using soft links
+
+#3) COPY radiative/viewfactors and thermal properties from Templates to the folders
+
+# Copying SOLID properites in constant folder solid region
+path_solidconst=./Templates/solid
+
+for i in $listsolid; do
+	cp $path_solidconst/radiation* $path_solidconst/thermo* ./constant/$i
+done
+
+#Copying FLUID properties in constant folder fluid region
+path_fluidconst=./Templates/fluid
+
+for i in $listfluid; do
+	cp $path_fluidconst/g $path_fluidconst/thermo* $path_fluidconst/radiation* $path_fluidconst/turbu* $path_fluidconst/view* $path_fluidconst/boundaryR* ./constant/$i
+done
+

@@ -1,0 +1,20 @@
+#!/bin/sh
+cd "${0%/*}" || exit                                # Run from this directory
+. ${WM_PROJECT_DIR:?}/bin/tools/CleanFunctions      # Tutorial clean functions
+#------------------------------------------------------------------------------
+
+cleanCase0
+
+rm -rf VTK
+rm -rf constant/cellToRegion
+rm -rf constant/*/polyMesh  # region meshes
+
+rm -f constant/domain0/F
+rm -f constant/domain0/constructMap*
+rm -f constant/domain0/finalAgglom
+rm -f constant/domain0/globalFaceFaces
+rm -f constant/domain0/subMap
+rm -f constant/domain0/visibleFaceFaces
+rm -f constant/domain0/mapDist
+
+#------------------------------------------------------------------------------

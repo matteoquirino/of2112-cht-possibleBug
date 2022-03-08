@@ -1,0 +1,7 @@
+        {
+            type            greyDiffusiveRadiationViewFactor;
+            emissivityMode  lookup;
+            qro             uniform 0;
+            emissivity      uniform 1.0;
+            value           uniform 0;
+        }

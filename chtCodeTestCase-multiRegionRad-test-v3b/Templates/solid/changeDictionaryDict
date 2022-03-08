@@ -1,0 +1,87 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      changeDictionaryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+T
+{
+    internalField   uniform 240;
+
+    boundaryField
+    {
+
+        "PlateMinZ_to_DeepSpace.*"
+	     {
+            type            compressible::turbulentTemperatureRadCoupledMixed;
+            Tnbr            T;
+            kappaMethod     solidThermo;
+            qrNbr           qr;
+            qr              none;
+            value           uniform 240;
+        }
+
+        "PlateMinZ_to_InnerSpace"
+	     {
+            type            compressible::turbulentTemperatureRadCoupledMixed;
+            Tnbr            T;
+            kappaMethod     solidThermo;
+            qrNbr           qr;
+            qr              none;
+            value           uniform 240;
+        }
+
+        "PlateMinZ_to_PlatePlusX"
+        {
+            type            compressible::turbulentTemperatureCoupledBaffleMixed;
+            Tnbr            T;
+		    thicknessLayers (1e-6);
+		    kappaLayers     (1e-60);
+            kappaMethod     solidThermo;
+            value           uniform 240;
+        }
+
+        "PlateMinZ_to_PlateMinX"
+        {
+            type            compressible::turbulentTemperatureCoupledBaffleMixed;
+            Tnbr            T;
+		    thicknessLayers (1e-6);
+		    kappaLayers     (1e-60);
+            kappaMethod     solidThermo;
+            value           uniform 240;
+        }
+
+        "PlateMinZ_to_PlatePlusY"
+        {
+            type            compressible::turbulentTemperatureCoupledBaffleMixed;
+            Tnbr            T;
+		    thicknessLayers (1e-6);
+		    kappaLayers     (1e-60);
+            kappaMethod     solidThermo;
+            value           uniform 240;
+        }
+
+        "PlateMinZ_to_PlateMinY"
+        {
+            type            compressible::turbulentTemperatureCoupledBaffleMixed;
+            Tnbr            T;
+		    thicknessLayers (1e-6);
+		    kappaLayers     (1e-60);
+            kappaMethod     solidThermo;
+            value           uniform 240;
+        }
+
+    }
+}
+
+// ************************************************************************* //

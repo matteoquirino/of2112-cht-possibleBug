@@ -1,0 +1,8 @@
+        {
+           type            compressible::turbulentTemperatureRadCoupledMixed;
+           Tnbr            T;
+           thicknessLayers (1e-6);
+           kappaLayers     (1e-4);
+           kappaMethod     solidThermo;
+           value           uniform 300;
+        }

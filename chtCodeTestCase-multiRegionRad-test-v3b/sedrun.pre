@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#Using sed to manipulate changeDictionary with respect to default values
+sed -i '
+	/^qr/,$ {
+		/domain0_to_Mesh_1/,$ {
+					s/qro[ ]*uniform 0;/qro				uniform 1400;/1
+				}
+	}
+' ./system/domain0/changeDictionaryDict
+
+sed -i 's/internalField.*/internalField   uniform 300;/g' ./system/Mesh_2/changeDictionaryDict
+
+#					s/qro[ ]*uniform 0;/qro				uniform #calc"-1*1369.74*0.76";/1
+
